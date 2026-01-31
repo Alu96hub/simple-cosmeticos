@@ -401,7 +401,183 @@ header {
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 9998;
 }
+/* AGREGAR ESTAS REGLAS ESPECÍFICAMENTE PARA EL CARRITO - DESPUÉS DE .cart-overlay */
 
+/* Ajustes específicos para dispositivos Samsung Galaxy */
+@media (max-width: 768px) {
+    /* FIX para Samsung Galaxy A24 - z-index y posicionamiento */
+    .cart-dropdown {
+        z-index: 99999 !important; /* Más alto para Samsung */
+        -webkit-overflow-scrolling: touch; /* Scroll suave en iOS/Samsung */
+        overscroll-behavior: contain; /* Previene scroll del body detrás */
+    }
+    
+    .cart-overlay {
+        z-index: 99998 !important; /* Un poco menos que el dropdown */
+    }
+    
+    /* Asegurar que el carrito esté por encima de todo en Samsung */
+    .cart-dropdown.active {
+        transform: translateZ(0); /* Aceleración hardware */
+        will-change: transform; /* Optimización */
+    }
+    
+    /* Botones más grandes para Samsung TouchWiz/One UI */
+    .quantity-btn {
+        min-width: 34px;
+        min-height: 34px;
+        font-size: 1.1rem;
+    }
+    
+    .cart-item-remove {
+        padding: 8px 12px;
+        font-size: 0.95rem;
+    }
+    
+    .btn-checkout {
+        padding: 18px;
+        font-size: 1.15rem;
+        min-height: 56px;
+    }
+    
+    /* Fix para el input en formulario de Samsung */
+    .form-group input,
+    .form-group textarea {
+        font-size: 16px !important; /* Previene zoom automático en Samsung */
+    }
+}
+
+/* Estilos específicos para pantallas pequeñas de Samsung (390-412px es común en Galaxy A24) */
+@media (min-width: 390px) and (max-width: 412px) {
+    .cart-dropdown {
+        width: 100%;
+        right: 0;
+        border-radius: 0;
+        top: 0;
+        height: 85vh; /* Deja espacio para la barra de navegación de Samsung */
+        max-height: 85vh;
+    }
+    
+    .cart-items-container {
+        max-height: calc(85vh - 200px); /* Altura ajustada para contenido */
+        padding-bottom: 20px;
+    }
+    
+    .cart-footer {
+        padding: 15px;
+        position: sticky;
+        bottom: 0;
+        background-color: var(--blanco);
+        border-top: 2px solid var(--verde-natural);
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Ajustar header para que no se superponga con notch/hole punch */
+    .cart-header {
+        padding-top: max(20px, env(safe-area-inset-top));
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+    }
+}
+
+/* Para pantallas muy altas (como Galaxy A24 tiene 1080x2340) */
+@media (min-height: 700px) and (max-width: 768px) {
+    .cart-dropdown {
+        height: 75vh; /* Menos altura en pantallas altas */
+        max-height: 75vh;
+    }
+    
+    .cart-items-container {
+        max-height: calc(75vh - 200px);
+    }
+}
+
+/* Fix específico para el problema de visualización en Samsung */
+@media (max-width: 768px) {
+    /* Asegurar que el body no se desplace cuando el carrito está abierto */
+    body.cart-open {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Mejorar la visibilidad del overlay */
+    .cart-overlay.active {
+        background-color: rgba(0, 0, 0, 0.7); /* Más oscuro para mejor contraste */
+        backdrop-filter: blur(2px); /* Efecto de desenfoque en fondos modernos */
+    }
+    
+    /* Asegurar que el carrito esté siempre visible */
+    .cart-dropdown {
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
+    }
+    
+    /* Botón cerrar más visible */
+    .close-cart {
+        width: 44px;
+        height: 44px;
+        font-size: 1.6rem;
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Fix para el problema de notch/hole punch en Samsung */
+@supports (padding: max(0px)) {
+    .cart-header {
+        padding-top: max(20px, env(safe-area-inset-top));
+        padding-bottom: max(15px, env(safe-area-inset-bottom));
+    }
+    
+    .cart-footer {
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Ajustes para formulario en Samsung */
+@media (max-width: 768px) {
+    .form-modal {
+        padding: 0;
+        align-items: flex-end; /* Para que suba desde abajo en móvil */
+    }
+    
+    .form-container {
+        max-height: 90vh;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        margin-top: auto;
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+    
+    .form-actions {
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+}
+
+/* Mejorar el contraste para pantallas Samsung AMOLED */
+@media (max-width: 768px) {
+    .cart-item {
+        border-bottom: 1px solid #e0e0e0; /* Línea más visible */
+    }
+    
+    .cart-item-total {
+        font-weight: 700;
+        color: var(--verde-natural);
+    }
+    
+    .btn-checkout {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+}
 .cart-overlay.active {
     display: block;
 }
