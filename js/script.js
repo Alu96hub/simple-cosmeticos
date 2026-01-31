@@ -1,3 +1,231 @@
+// AGREGAR estas funciones específicas para Samsung al principio del archivo
+
+// Detectar si es dispositivo Samsung
+function isSamsungDevice() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    return /samsung/i.test(userAgent) || 
+           /SM-A/i.test(userAgent) ||  // Galaxy A series
+           /SM-G/i.test(userAgent) ||  // Galaxy S series
+           /SM-N/i.test(userAgent);    // Galaxy Note series
+}
+
+// Detectar si tiene notch o hole-punch
+function hasNotch() {
+    return window.innerWidth <= 412 && window.innerHeight >= 800;
+}
+
+// MODIFICAR la función openCart para Samsung
+function openCart() {
+    cartDropdown.classList.add('active');
+    
+    if (isMobile()) {
+        cartOverlay.classList.add('active');
+        
+        // Añadir clase al body para Samsung
+        if (isSamsungDevice()) {
+            document.body.classList.add('cart-open');
+            
+            // Scroll al top para evitar problemas de visualización
+            window.scrollTo(0, 0);
+            
+            // Bloquear scroll del body
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.height = '100%';
+            
+            // Forzar reflow para asegurar la visualización
+            cartDropdown.offsetHeight;
+        } else {
+            document.body.style.overflow = 'hidden';
+        }
+    }
+}
+
+// MODIFICAR la función closeCart para Samsung
+function closeCart() {
+    cartDropdown.classList.remove('active');
+    cartOverlay.classList.remove('active');
+    
+    if (isMobile()) {
+        // Remover clase del body para Samsung
+        if (isSamsungDevice()) {
+            document.body.classList.remove('cart-open');
+            
+            // Restaurar estilos del body
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.height = '';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+// MODIFICAR la función updateCartPosition para Samsung
+function updateCartPosition() {
+    if (!isMobile() && cartOverlay.classList.contains('active')) {
+        cartOverlay.classList.remove('active');
+        
+        if (isSamsungDevice()) {
+            document.body.classList.remove('cart-open');
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.height = '';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+    
+    // Ajustar altura del carrito para Samsung con notch
+    if (isMobile() && hasNotch() && cartDropdown.classList.contains('active')) {
+        const viewportHeight = window.innerHeight;
+        const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0;
+        const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sab')) || 0;
+        
+        // Ajustar el carrito para el notch
+        cartDropdown.style.height = `calc(${viewportHeight}px - ${safeAreaTop}px)`;
+        cartDropdown.style.top = `${safeAreaTop}px`;
+    }
+}
+
+// AGREGAR este event listener para manejar el teclado en Samsung
+document.addEventListener('DOMContentLoaded', () => {
+    // ... código existente ...
+    
+    // Manejar visibilidad del carrito cuando se abre el teclado en Samsung
+    window.addEventListener('resize', () => {
+        if (isMobile() && cartDropdown.classList.contains('active')) {
+            // Si la altura de la ventana cambió significativamente (teclado abierto)
+            const heightChange = Math.abs(window.innerHeight - window.visualViewport.height);
+            
+            if (heightChange > 200 && isSamsungDevice()) {
+                // Ajustar el carrito cuando el teclado está abierto
+                const visualHeight = window.visualViewport.height;
+                cartDropdown.style.height = `${visualHeight}px`;
+                cartDropdown.style.top = '0';
+            }
+        }
+    });
+    
+    // Prevenir cierre accidental con gestos en Samsung
+    let startY = 0;
+    let currentY = 0;
+    
+    cartDropdown.addEventListener('touchstart', (e) => {
+        if (isMobile() && isSamsungDevice()) {
+            startY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+    
+    cartDropdown.addEventListener('touchmove', (e) => {
+        if (isMobile() && isSamsungDevice()) {
+            currentY = e.touches[0].clientY;
+            
+            // Permitir scroll interno pero prevenir cierre con swipe down
+            const cartContent = cartItemsContainer;
+            const isAtTop = cartContent.scrollTop === 0;
+            const isScrollingDown = currentY > startY;
+            
+            // Si estamos en la parte superior y hacemos swipe down, prevenir default
+            if (isAtTop && isScrollingDown) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+    
+    // Mejorar la respuesta táctil para botones en Samsung
+    document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('touchstart', function() {
+            if (isSamsungDevice()) {
+                this.style.transform = 'scale(0.95)';
+                this.style.transition = 'transform 0.1s';
+            }
+        });
+        
+        button.addEventListener('touchend', function() {
+            if (isSamsungDevice()) {
+                this.style.transform = '';
+                this.style.transition = '';
+            }
+        });
+    });
+    
+    // ... resto del código existente ...
+});
+
+// MODIFICAR la función addToCart para mejor feedback en Samsung
+function addToCart(productId) {
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) return;
+    
+    // Verificar si el producto ya está en el carrito
+    const existingItem = cart.find(item => item.id === productId);
+    
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            quantity: 1
+        });
+    }
+    
+    // Actualizar carrito
+    updateCartDisplay();
+    saveCartToLocalStorage();
+    
+    // Mostrar notificación con vibración en Samsung si está disponible
+    showNotification(`¡${product.name} agregado al carrito!`);
+    
+    // Vibrar si es posible (Samsung admite vibración)
+    if (isSamsungDevice() && 'vibrate' in navigator) {
+        navigator.vibrate(50);
+    }
+    
+    // Abrir carrito automáticamente en desktop
+    if (!isMobile()) {
+        openCart();
+    }
+}
+
+// AGREGAR función para manejar el back button de Samsung
+if (isSamsungDevice()) {
+    // Manejar el botón back físico de Samsung
+    window.addEventListener('popstate', function(event) {
+        if (cartDropdown.classList.contains('active')) {
+            closeCart();
+            history.pushState(null, null, window.location.pathname);
+        }
+    });
+    
+    // Para dispositivos con gestos de navegación
+    let startX = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+        if (cartDropdown.classList.contains('active')) {
+            startX = e.touches[0].clientX;
+        }
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', (e) => {
+        if (cartDropdown.classList.contains('active') && startX < 50) {
+            const currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+            
+            // Si el gesto comienza cerca del borde izquierdo y se mueve a la derecha
+            if (diff > 100) {
+                closeCart();
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+}
 // Datos de productos con URLs de imágenes y categorías
 const products = [
     { id: 1, name: "Shampoo sólido", price: 1000, image: "shampoo-solido.jpg", categoria: "cabello" },
